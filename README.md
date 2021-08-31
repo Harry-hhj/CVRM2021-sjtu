@@ -210,7 +210,7 @@ TODO：opencv 安装教程将另外发布。
 
 
 
-![image-20210831135451239](README.assets/image-20210831135451239.png)
+<img src="README.assets/image-20210831135451239.png" alt="image-20210831135451239" style="zoom:65%;" />
 
 
 
