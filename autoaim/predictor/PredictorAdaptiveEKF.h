@@ -75,7 +75,7 @@ private:
     double last_yaw = 0, last_pitch = 0;
 
     bool distant = false, antitop = false, exist_hero = false;  // 远距离、反陀螺、英雄存在标志位
-    bool last_is_one_armor = false, last_is_two_armors = false, right = true, clockwise = true;  // 防抖层
+    bool last_is_one_armor = false, last_is_two_armors = false, right = true, clockwise = true;  // clockwise：逆时针
 
     int dead_buffer = 0;  // 灰色buffer
 
