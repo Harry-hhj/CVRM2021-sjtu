@@ -1,0 +1,17 @@
+.vscode
+build
+
+.idea
+cmake-build-*
+
+__MAC_OSX__
+.DS_Store
+
+example/cmake-build-*
+
+script/__pycache__
+script/Camera
+
+asset/*.cache
+
+data/
