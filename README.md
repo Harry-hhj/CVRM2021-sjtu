@@ -244,6 +244,8 @@ TODO：opencv 安装教程将另外发布。
 
 <video src="README.assets/model-preview.mp4"></video>
 
+GitHub 不支持视频预览，在此提供百度网盘链接：链接: https://pan.baidu.com/s/1k2W8T9uvBhpPumMV8EP5UA 提取码: mwnn
+
 欢迎大家与我们共同制作数据集，维护 RM 数据集社区，我们的数据集标注软件[仓库](https://github.com/xinyang-go/LabelRoboMaster.git)（尚在开发中）。
 
 
@@ -304,6 +306,12 @@ TODO：opencv 安装教程将另外发布。
 拓展 Kalman 滤波是一个很不错的滤波器，想要知道具体的原理请看相关的论文。它击打匀速运动的物体有较高的命中率，同时更新速度也不是很慢。其核心的思想是：用观测值来更新预测值，类似于形成一个闭环的反馈，通过设置预测量和观测量的协方差矩阵（类似于噪声，虽然这么说不严谨），让预测器不会超前和滞后。
 
 我们使用 EKF 而非传统 Kalman 模型的理由是：解藕观测变量，消除变量间的相关性。相机解算出的观测量其实是 yaw 和 pitch 的相对值。传统 Kalman 模型的一个限制条件就是：系统是一个线性系统，而定义一个 yaw 和 pitch 匀角速运动的车辆显然不符合实际的物理模型（意味着车在一个球面上运动），而实际的运动情况是，受制于电机和惯性，车辆在较长时间内都近似匀速直线运动，而这个模型是定义在世界坐标系中的（相机坐标系会有自身的转动，不可取），意味着从观测量（yaw、pitch）到预测量（虽然最终转换成 yaw 、 pitch ，但本质是 xyz ）是一个非线性系统，为了避免观测量之间的噪声相互叠加损害预测器的工作，我们使用了 EKF ，它最大的优势是可以运用于非线性系统。这样，预测将会更加准确且收敛更快。
+
+下面是一些演示视频：
+
+![EKF_preview](README.assets/EKF_preview.gif)
+
+![EKF_preview2](README.assets/EKF_preview2.gif)
 
 TODO：EKF 原理教程将另外发布。
 
