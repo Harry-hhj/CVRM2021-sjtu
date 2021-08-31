@@ -20,6 +20,9 @@ using namespace std::chrono;
 namespace py = pybind11;
 
 void video_record(const std::string &storage_location = "../data/") {
+    /*
+     * 比赛视频录制函数，强制关机会出现未更新文件头的情况，数据不会丢失
+     */
     std::cout << "============ video_writer ===========" << std::endl;
 
     char now[64];
@@ -27,7 +30,7 @@ void video_record(const std::string &storage_location = "../data/") {
     struct tm *ttime;
     tt = time(nullptr);
     ttime = localtime(&tt);
-    strftime(now, 64, "%Y-%m-%d_%H_%M_%S", ttime);
+    strftime(now, 64, "%Y-%m-%d_%H_%M_%S", ttime);  // 以时间为名字
     std::string now_string(now);
     std::string path(std::string(storage_location + now_string).append(".avi"));
     try

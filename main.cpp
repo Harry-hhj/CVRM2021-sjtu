@@ -1,5 +1,8 @@
 #include <Python.h>
 
+/*
+ * 主函数入口，不需要改动
+ */
 int main(int argc, char *argv[]) {
     wchar_t *w_argv[argc];
     for (int i = 0; i < argc; i++) {

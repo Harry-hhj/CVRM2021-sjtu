@@ -1,3 +1,6 @@
+"""
+网站工具函数
+"""
 import ObjManager_RangeParam
 import ObjManager_Button
 import ObjManager_CheckBox

@@ -1,3 +1,6 @@
+"""
+网页脚本
+"""
 from flask import Flask, Response, render_template, request
 import argparse
 import bridge

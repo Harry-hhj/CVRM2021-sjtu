@@ -1,3 +1,6 @@
+"""
+传感器
+"""
 import SensorsIO
 
 SensorsIO.background_sensors_io_auto_restart(

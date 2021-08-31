@@ -28,6 +28,10 @@ static bool require_imu_stop = false;
 static bool debug = true;
 
 bool sync_once(MindVision &camera, ExtImu &imu, int sync_period_ms) {
+    /*
+     * 单词时间戳同步，并不是永远同步
+     * 重启相机并重新触发
+     */
     if (debug) std::cout << "============sync_once===========\n";
     camera.close();
     require_imu_stop = true;
@@ -50,6 +54,9 @@ bool sync_once(MindVision &camera, ExtImu &imu, int sync_period_ms) {
 }
 
 static void imu_capture_loop(ExtImu &imu, const bool &require_stop, bool &is_ok) {
+    /*
+     * 获得陀螺仪数据
+     */
     if (debug) std::cout << "============imu_capture_loop===========\n";
     ExtImu::sensor_data data{};
     imu_running = true;
@@ -73,145 +80,26 @@ static void imu_capture_loop(ExtImu &imu, const bool &require_stop, bool &is_ok)
             std::unique_lock lock(seq_q_mtx);
             //std::cout << "lock release" << std::endl;
             if (!seq_q.empty()) seq_q.pop();
-            seq_q.push({data.q[3], data.q[0], data.q[1], data.q[2]});
+            seq_q.push({data.q[3], data.q[0], data.q[1], data.q[2]});  // wxyz
         }
     }
 }
 
 static void auto_exposure_loop(MindVision &camera, const bool &require_stop, bool &is_ok) {
+    /*
+     * 由于 NX 调用某个 MindVision的 API 时会报错，因此本段代码无效
+     */
+
     // disable auto exposure
     return;
-
-    if (debug) std::cout << "============auto_exposure_loop===========\n";
-
-    umt::Subscriber<SensorsData> inputs_sub("sensors_data");
-    auto param = umt::ObjManager<AutoExposureParam>::find_or_create("auto_exposure_param");
-    while (!require_stop) {
-        cv::Mat im;
-        try {
-            const auto &data = inputs_sub.pop();
-            im = data.im;
-        } catch (umt::MessageError &e) {
-            fmt::print(fmt::fg(fmt::color::red), "[ERROR] 'auto_exposure_loop' {}\n", e.what());
-            is_ok = false;
-            break;
-        }
-
-        double current_exposure_us;
-        if (!camera.get_exposure_us(current_exposure_us)) {
-            is_ok = false;
-            break;
-        }
-        if (param->min_exposure_us < current_exposure_us &&
-            current_exposure_us < param->max_exposure_us) {
-            auto mean_channel_brightness = cv::mean(im);
-            double mean_brightness = (mean_channel_brightness[0] +
-                                      mean_channel_brightness[1] +
-                                      mean_channel_brightness[2]) / 3.;
-            if (mean_brightness > param->max_brightness) {
-                current_exposure_us -= param->step_exposure_us;
-                if (!camera.set_exposure_us(current_exposure_us)) {
-                    is_ok = false;
-                    break;
-                }
-                fmt::print("exposure set to {}us\n", current_exposure_us);
-            } else if (mean_brightness < param->min_brightness) {
-                current_exposure_us += param->step_exposure_us;
-                if (!camera.set_exposure_us(current_exposure_us)) {
-                    is_ok = false;
-                    break;
-                }
-                fmt::print("exposure set to {}us\n", current_exposure_us);
-            }
-        }
-        std::this_thread::sleep_for(200ms);
-    }
 }
-
-
-// when imu is not used
-/*
-bool sensors_io(const std::string &camera_name = "",
-                const std::string &camera_cfg = "",
-                const std::string &sensor_param_file = "") {
-    cv::FileStorage ifs;
-    if (!ifs.open(sensor_param_file, cv::FileStorage::READ)) {
-        fmt::print(fmt::fg(fmt::color::red), "[ERROR]: sensor parameter read fail!");
-        return false;
-    }
-    auto sensor_param = umt::ObjManager<SensorParam>::find_or_create("sensor_param");
-    try {
-        ifs["K"] >> sensor_param->K;
-        ifs["D"] >> sensor_param->D;
-        ifs["Tcb"] >> sensor_param->Tcb;
-        if (sensor_param->K.cols != 3 || sensor_param->K.rows != 3) {
-            throw std::runtime_error("sensor parameter 'K' invalid format!");
-        }
-        if (sensor_param->D.cols != 5 || sensor_param->D.rows != 1) {
-            throw std::runtime_error("sensor parameter 'D' invalid format!");
-        }
-        if (sensor_param->Tcb.cols != 3 || sensor_param->Tcb.rows != 3) {
-            throw std::runtime_error("sensor parameter 'Tcb' invalid format!");
-        }
-    } catch (cv::Exception &e) {
-        fmt::print(fmt::fg(fmt::color::red), "[ERROR]: {}", e.what());
-        return false;
-    }
-
-    MindVision camera(camera_name.data(), camera_cfg.data());
-    camera.open();
-    if (!camera.isOpen()) {
-        fmt::print(fmt::fg(fmt::color::red), "[ERROR]: camera init fail!\n");
-        return false;
-    }
-
-    umt::Publisher<cv::Mat> data_pub("camera");
-
-    bool auto_exposure_require_stop = false;
-    bool auto_exposure_is_ok = true;
-    std::thread auto_exposure_thread(auto_exposure_loop, std::ref(camera),
-                                     std::ref(auto_exposure_require_stop), std::ref(auto_exposure_is_ok));
-
-    auto t1 = high_resolution_clock::now();
-    int fps = 0, fps_count = 0;
-
-    while (auto_exposure_is_ok) {
-        cv::Mat img;
-        if (!camera.read(img)) {
-            fmt::print(fmt::fg(fmt::color::red), "Camera read error!\n");
-            break;
-        }
-        cv::cvtColor(img, img, cv::COLOR_RGB2BGR);
-        data_pub.push(img);
-    }
-
-    auto_exposure_require_stop = true;
-    auto_exposure_thread.join();
-
-    return false;
-}
-
-
-void background_sensors_io_auto_restart(const std::string &camera_name = "", 
-                                        const std::string &camera_cfg = "",
-                                        const std::string &sensor_param_file = "") {
-    std::thread([=]() {
-        while (!sensors_io(camera_name, camera_cfg, sensor_param_file)) {
-            std::this_thread::sleep_for(500ms);
-        }
-    }).detach();
-}
-
-PYBIND11_EMBEDDED_MODULE(SensorsIO, m) {
-    namespace py = pybind11;
-    m.def("background_sensors_io_auto_restart", background_sensors_io_auto_restart,
-          py::arg("camera_name") = "", py::arg("camera_cfg") = "", py::arg("sensor_param_file") = "");
-}
-*/
 
 bool sensors_io(const std::string &camera_name = "", const std::string &camera_cfg = "",
                 const std::string &sensor_param_file = "",
                 const std::string &imu_usb_hid = "", int sync_period_ms = 10) {
+    /*
+     * 读入外参文件，打包数据发布
+     */
     if (debug) std::cout << "============sensors_io===========\n";
 
     cv::FileStorage ifs;
@@ -300,16 +188,6 @@ bool sensors_io(const std::string &camera_name = "", const std::string &camera_c
         }
         timestamp /= 1e3;
         cv::cvtColor(img, img, cv::COLOR_RGB2BGR);
-//        cv::rotate(img, img, cv::ROTATE_180);
-//        if (seq_q.empty()) {
-//            fmt::print(fmt::fg(fmt::color::red), "Imu read error!\n");
-//            break;
-//        }
-
-// #ifndef NDEBUG
-//         std::cout << "current imu data in waiting: " << seq_q.size() << std::endl;
-//         std::cout.flush();
-// #endif
 
         /* publish data */
         {

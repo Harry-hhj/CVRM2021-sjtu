@@ -1,3 +1,6 @@
+"""
+自瞄识别器
+"""
 import AutoAim
 
 AutoAim.background_detection_run(

@@ -20,6 +20,9 @@ using namespace std::chrono;
 static bool debug = true;
 
 void robot_cmd_loop(Serial &robot_port, const bool &required_stop, bool &is_ok) {
+    /*
+     * 将收到的数据统一发送出去
+     */
     if (debug) std::cout << "============robot_cmd_loop===========\n";
     umt::Subscriber<RobotCmd> robot_cmd_sub("robot_cmd", 0);
     while (!required_stop) {
@@ -44,6 +47,10 @@ void robot_cmd_loop(Serial &robot_port, const bool &required_stop, bool &is_ok) 
 
 // manifold-2g
 bool robot_io_4pin(const std::string &robot_port_name = "") {
+    /*
+     * 妙算可以直接使用 4pin 口发送数据
+     * 可以尝试 THS1 或者 THS2
+     */
     if (debug) std::cout << "============robot_io_4pin===========\n";
     std::cout << "robot_port_name" << robot_port_name << std::endl;
     Serial robot_port(robot_port_name, 115200);
@@ -64,22 +71,18 @@ bool robot_io_4pin(const std::string &robot_port_name = "") {
         try {
             uint8_t start;
             robot_port.read(&start, 1);
-//            std::cout << "sizeof(RobotStatus) = " << sizeof(RobotStatus) << std::endl;
-//            std::cout << "start:" << std::hex << unsigned(start) << std::endl;
             while (unsigned(start) != unsigned('s')) robot_port.read(&start, 1);
             robot_port.read((uint8_t *) &scurr, sizeof(RobotStatus));
             uint8_t lrc = 0;
-            //std::cout << "size:" << sizeof(RobotStatus) << std::endl;
             for(auto *ptr = ((uint8_t*)&(scurr.enemy_color)); ptr < ((uint8_t*)&(scurr.lrc)); ptr++){
                 lrc += *ptr;
-//                std::cout << " *ptr:" << std::hex << unsigned(*ptr) << " ptr:" << (void*)(ptr) << std::endl;
             }
             uint8_t end = 0;
             robot_port.read(&end, 1);
-	    if (lrc == scurr.lrc && end == unsigned('e'))memcpy((uint8_t *)robot_status_short.get(),(uint8_t *)&scurr,sizeof(scurr));
-	    else while (unsigned(end) != unsigned('e'))robot_port.read(&end,1);
-//            std::cout << "end:" << std::hex << unsigned(end) << std::endl;
-//            std::cout << "lrc: " << unsigned(lrc) << " robot_cmd_lrc: " << unsigned(robot_status_short->lrc) << std::endl;
+	    if (lrc == scurr.lrc && end == unsigned('e'))
+	        memcpy((uint8_t *)robot_status_short.get(),(uint8_t *)&scurr,sizeof(scurr));
+	    else while (unsigned(end) != unsigned('e'))
+	        robot_port.read(&end,1);
         } catch (SerialException &e) {
             fmt::print(fmt::fg(fmt::color::red), "[ERROR] {}\n", e.what());
             break;
@@ -104,14 +107,18 @@ void background_robot_io_4pin_auto_restart(const std::string &robot_port_name = 
 
 // Xavier nx
 bool robot_io_usb(const std::string &robot_usb_hid = "") {
+    /*
+     * 使用 ttl 模块发送数据
+     */
     if (debug) std::cout << "============robot_io_usb===========\n";
     Serial robot_port;
     std::cout << "finding serial port" << std::endl;
+    // 第一次运行程序是可以打印所有可用串口
     for (const auto &port_info : list_ports()) {
         std::cout << port_info.port << "|" << port_info.hardware_id << std::endl;
         if (port_info.hardware_id == robot_usb_hid) {
             robot_port.setPort(port_info.port);
-            robot_port.setBaudrate(115200);
+            robot_port.setBaudrate(115200);  // 设置波特率
             auto timeout = Timeout::simpleTimeout(Timeout::max());
             robot_port.setTimeout(timeout);
             break;
@@ -131,6 +138,7 @@ bool robot_io_usb(const std::string &robot_usb_hid = "") {
     std::thread robot_cmd_thread(robot_cmd_loop, std::ref(robot_port),
                                  std::ref(robot_cmd_required_stop), std::ref(robot_cmd_is_ok));
 
+    // 双通信协议
     auto robot_status_short = umt::ObjManager<ShortRobotStatus>::find_or_create("robot_status_short");
     auto robot_status_long = umt::ObjManager<LongRobotStatus>::find_or_create("robot_status_long");
 
@@ -139,24 +147,22 @@ bool robot_io_usb(const std::string &robot_usb_hid = "") {
         LongRobotStatus hcurr;
         try {
             uint8_t start;
-            robot_port.read(&start, 1);
-//            std::cout << "sizeof(RobotStatus) = " << sizeof(RobotStatus) << std::endl;
-//            std::cout << "start:" << std::hex << unsigned(start) << std::endl;
+            robot_port.read(&start, 1);  // 读入起始位
             while (unsigned(start) != unsigned('s') && unsigned(start) != unsigned('h')) robot_port.read(&start, 1);
-            if (unsigned(start) == unsigned('s')) {
+            if (unsigned(start) == unsigned('s')) {  // 短包
                 robot_port.read((uint8_t *) &scurr, sizeof(ShortRobotStatus));
                 uint8_t lrc = 0;
                 for(auto *ptr = ((uint8_t*)&(scurr.enemy_color)); ptr < ((uint8_t*)&(scurr.lrc)); ptr++) lrc += *ptr;  //TODO:sizeof
-                uint8_t end=0;
+                uint8_t end = 0;
                 robot_port.read(&end, 1);
 	            if (lrc == scurr.lrc && end == unsigned('e')) memcpy((uint8_t *)robot_status_short.get(),(uint8_t *)&scurr,sizeof(scurr));
 	            else while (unsigned(end) != unsigned('e')) robot_port.read(&end,1);
             }
-            else if (unsigned(start) == unsigned('h')) {
+            else if (unsigned(start) == unsigned('h')) {  // 长包
                 robot_port.read((uint8_t *) &hcurr, sizeof(LongRobotStatus));
                 uint8_t lrc = 0;
                 for(auto *ptr = ((uint8_t*)&(hcurr.program_mode)); ptr < ((uint8_t*)&(hcurr.lrc)); ptr++) lrc += *ptr;  //TODO:sizeof
-                uint8_t end=0;
+                uint8_t end = 0;
                 robot_port.read(&end, 1);
 	            if (lrc == hcurr.lrc && end == unsigned('e')) memcpy((uint8_t *)robot_status_long.get(),(uint8_t *)&hcurr,sizeof(hcurr));
 	            else while (unsigned(end) != unsigned('e')) robot_port.read(&end,1);
@@ -182,6 +188,9 @@ void background_robot_io_usb_auto_restart(const std::string &robot_usb_hid = "")
     }).detach();
 }
 
+/*
+ * umt 导出自定义结构体部分
+ */
 UMT_EXPORT_OBJMANAGER_ALIAS(ShortRobotStatus, ShortRobotStatus, c) {
     c.def_readwrite("enemy_color", &ShortRobotStatus::enemy_color);
     c.def_readwrite("eject", &ShortRobotStatus::eject);
@@ -212,6 +221,7 @@ PYBIND11_EMBEDDED_MODULE(RobotIO, m) {
           py::arg("robot_port_name") = "");
     m.def("background_robot_io_usb_auto_restart", background_robot_io_usb_auto_restart,
           py::arg("robot_usb_hid") = "");
+    // 导出枚举类型
     py::enum_<EnemyColor>(m ,"EnemyColor")
             .value("RED", EnemyColor::RED)
             .value("BLUE", EnemyColor::BLUE)

@@ -1,3 +1,6 @@
+"""
+通信
+"""
 import RobotIO
 
 # 妙算 4pin 口通信

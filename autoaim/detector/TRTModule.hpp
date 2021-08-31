@@ -18,10 +18,10 @@ struct alignas(4) bbox_t {
     bool operator!=(const bbox_t&) const = default;
 };
 
+/*
+ * 四点模型
+ */
 class TRTModule {
-    /*
-     * 四点模型
-     */
     static constexpr int TOPK_NUM = 128;
     static constexpr float KEEP_THRES = 0.1f;
 

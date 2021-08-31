@@ -5,6 +5,11 @@
 
 namespace py = pybind11;
 
+/*
+ * 网页常用工具函数
+ */
+
+// cv::Mat --> numpy.ndarray
 py::array_t<uint8_t> cvMat2npArray(const cv::Mat &mat) {
     py::array_t<uint8_t> array({mat.rows, mat.cols, mat.channels()});
     cv::Mat ref_mat(mat.rows, mat.cols, CV_8UC(mat.channels()), array.mutable_data());
@@ -12,6 +17,7 @@ py::array_t<uint8_t> cvMat2npArray(const cv::Mat &mat) {
     return array;
 }
 
+// numpy.ndarray --> cv::Mat
 cv::Mat npArray2cvMat(const py::array_t<uint8_t> &array) {
     cv::Mat mat;
     return mat;
@@ -30,6 +36,7 @@ UMT_EXPORT_OBJMANAGER_ALIAS(RangeParam, RangeParam, c) {
     c.def_readwrite("step_value", &RangeParam::step_value);
 }
 
+// 按钮
 bool Button::is_press_once() {
     if (is_press) {
         is_press = false;
