@@ -242,9 +242,7 @@ TODO：opencv 安装教程将另外发布。
 
 以下是一段演示视频：
 
-<video src="README.assets/model-preview.mp4"></video>
-
-GitHub 不支持视频预览，在此提供百度网盘链接：链接: https://pan.baidu.com/s/1k2W8T9uvBhpPumMV8EP5UA 提取码: mwnn
+GitHub 不支持视频预览，视频较大，在此提供百度网盘链接：链接: https://pan.baidu.com/s/1k2W8T9uvBhpPumMV8EP5UA 提取码: mwnn
 
 欢迎大家与我们共同制作数据集，维护 RM 数据集社区，我们的数据集标注软件[仓库](https://github.com/xinyang-go/LabelRoboMaster.git)（尚在开发中）。
 
