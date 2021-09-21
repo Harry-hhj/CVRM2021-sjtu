@@ -240,7 +240,7 @@ bool PredictorAdaptiveEKF::predict(Detection_pack &data, RobotCmd &send, cv::Mat
         else if (last_is_two_armors && this_is_one_armor && antitop) {
             /* 反陀螺模式下，如果出现一块装甲板，选择上次陀螺转向落后的一块更新 */
             selected = true;
-            if ((clockwise && !right) || (!clockwise && right)) {
+            if ((anticlockwise && !right) || (!anticlockwise && right)) {
                 /* 上一次击打的装甲板就是落后的一块 */
                 for (auto &d: new_detections) {
                     if (d.tag_id == last_sbbox.tag_id) {
@@ -252,7 +252,7 @@ bool PredictorAdaptiveEKF::predict(Detection_pack &data, RobotCmd &send, cv::Mat
                 same_id = false;
                 switch_armor = false;
                 need_init = false;
-            } else if ((clockwise && right) || (!clockwise && !right)) {
+            } else if ((anticlockwise && right) || (!anticlockwise && !right)) {
                 /* 上一次击打的装甲板不是落后的一块，此时需要切换装甲板，调用候选预测器 */
                 same_id = true;
                 switch_armor = true;
@@ -335,7 +335,7 @@ bool PredictorAdaptiveEKF::predict(Detection_pack &data, RobotCmd &send, cv::Mat
                     }
                 }
             }
-            if (clockwise) {
+            if (anticlockwise) {
                 if (m_pw1[0] > m_pw2[0]) {
                     armor = t1;
                     right = true;
@@ -812,8 +812,8 @@ bool PredictorAdaptiveEKF::predict(Detection_pack &data, RobotCmd &send, cv::Mat
             antitop_candidates.erase(antitop_candidates.begin() + i);
 
             if (this_is_two_armors) right = !right;
-            if (send.yaw_angle > 0) clockwise = false;
-            else clockwise = true;
+            if (send.yaw_angle > 0) anticlockwise = false;
+            else anticlockwise = true;
 
             break;
         }
