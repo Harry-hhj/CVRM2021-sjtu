@@ -44,10 +44,6 @@ include_directories(autoaim)
 add_subdirectory(autoaim)
 target_link_libraries(CVRM2021 autoaim)
 
-include_directories(calibration)
-add_subdirectory(calibration)
-target_link_libraries(CVRM2021 calibration)
-
 include_directories(record)
 add_subdirectory(record)
 target_link_libraries(CVRM2021 record)
