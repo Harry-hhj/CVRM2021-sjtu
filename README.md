@@ -5,6 +5,13 @@
 
 上海交通大学 RoboMaster 战队 2021 赛季视觉代码框架。
 
+官方开源贴：
+RM2021-上海交通大学-云汉交龙战队-视觉算法开源
+https://bbs.robomaster.com/forum.php?mod=viewthread&tid=12309&fromuid=43437
+(出处: RoboMaster)
+
+我们开放了一个[讨论文档](https://docs.qq.com/doc/DUVZRVmJwaGVBT056)，大家有什么问题都可以去里面提问，甚至可以回答问题，或者加入QQ讨论群（953236946）。
+
 ---
 
 
