@@ -23,11 +23,6 @@ void func1(){
     // create one publisher
     // format: umt::Publisher<<class type>> variable(<name>)
     umt::Publisher<A> pub1("pub-A");
-    /*
-     * To define a finite length, declare this param when you create a publisher
-     * format: umt::Publisher<<type>> pub1(<name>, length);
-     * e.g. When length equals to 1, it means the data is up-to-date
-     */
 
     while (true){
         pub1.push(A("pubA: hello, world."));
@@ -42,6 +37,13 @@ void func2(){
     // create one subscriber
     // format: umt::Subscriber<<class type>> variable(<name>)
     umt::Subscriber<A> sub1("pub-A");
+
+    /*
+     * To define a finite length, declare this param when you create a subscriber
+     * format: umt::Subscriber<<type>> pub1(<name>, length);
+     * e.g. When length equals to 1, it means the data is up-to-date
+     * each subscriber can have its own queue length
+     */
 
     while(true) {
         try {
