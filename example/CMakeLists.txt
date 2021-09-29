@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(OpenCV 4 REQUIRED)
 find_package(pybind11 REQUIRED)
-find_package(Python3 3.8 EXACT REQUIRED COMPONENTS Development Interpreter)
+find_package(Python3 3.6 EXACT REQUIRED COMPONENTS Development Interpreter)
 
 include_directories(../UltraMultiThread/include)
 

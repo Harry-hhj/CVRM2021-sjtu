@@ -18,7 +18,7 @@ void A::print() {
  * use sleep_for or try-catch
  */
 
-// inside is a publisher
+// inside func1 is a publisher
 void func1(){
     // create one publisher
     // format: umt::Publisher<<class type>> variable(<name>)
@@ -30,14 +30,14 @@ void func1(){
      */
 
     while (true){
-        pub1.push(A("hello, world."));
+        pub1.push(A("pubA: hello, world."));
 
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
 
 
-// inside is a subscriber
+// inside func2 is a subscriber
 void func2(){
     // create one subscriber
     // format: umt::Subscriber<<class type>> variable(<name>)
@@ -53,7 +53,7 @@ void func2(){
     }
 }
 
-// inside is a publisher whose subscriber is in python
+// inside func3 is a publisher whose subscriber appears in python
 void func3(){
     // create one publisher
     // format: umt::Publisher<<class type>> variable(<name>)
@@ -66,7 +66,7 @@ void func3(){
     }
 }
 
-// inside is a subscriber whose publisher is in python
+// inside func4 is a subscriber whose publisher appears in python
 void func4(){
     umt::Subscriber<A> sub2("pub-B1");
     A a;
@@ -88,7 +88,14 @@ int main(int argc, char *argv[]) {
     std::thread(func2).detach();
     std::thread(func3).detach();
     std::thread(func4).detach();
-    return Py_BytesMain(argc, argv);
+
+    wchar_t *w_argv[argc];
+    for (int i = 0; i < argc; i++) {
+        size_t len = std::mbstowcs(nullptr, argv[i], 0) + 1;
+        w_argv[i] = new wchar_t[len];
+        std::mbstowcs(w_argv[i], argv[i], len);
+    }
+    return Py_Main(argc, w_argv);
 }
 
 // register your customized class in python library
@@ -96,7 +103,7 @@ UMT_EXPORT_MESSAGE_ALIAS(A, A, c){
     /*
      * for class member variable, use c.def_readwrite() or c.def_readonly()
      * for class member function, use c.def()
-     * just take their address ussing '&'
+     * just take their address using '&'
      */
 
     c.def(pybind11::init<>());
