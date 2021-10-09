@@ -322,7 +322,8 @@ namespace umt {
             .def(py::init<std::string>(), py::arg("msg_name"))  \
             .def("reset", &Publisher<type>::reset)              \
             .def("bind", &Publisher<type>::bind)                \
-            .def("push", &Publisher<type>::push)                \
+            .def("push", &Publisher<type>::push,                \
+                 py::call_guard<py::gil_scoped_release>())      \
             ;                                                   \
         py::class_<Subscriber<type>>(m, "Subscriber")           \
             .def(py::init<>())                                  \
@@ -332,8 +333,10 @@ namespace umt {
             .def("reset", &Subscriber<type>::reset)             \
             .def("bind", &Subscriber<type>::bind)               \
             .def("clear", &Subscriber<type>::clear)             \
-            .def("pop", &Subscriber<type>::pop)                 \
-            .def("pop_for", &Subscriber<type>::pop_for)         \
+            .def("pop", &Subscriber<type>::pop,                 \
+                 py::call_guard<py::gil_scoped_release>())      \
+            .def("pop_for", &Subscriber<type>::pop_for,         \
+                 py::call_guard<py::gil_scoped_release>())      \
             ;                                                   \
     }
 
@@ -350,7 +353,8 @@ void __umt_init_message_##name(pybind11::class_<type> && var);  \
             .def(py::init<std::string>(), py::arg("msg_name"))  \
             .def("reset", &Publisher<type>::reset)              \
             .def("bind", &Publisher<type>::bind)                \
-            .def("push", &Publisher<type>::push)                \
+            .def("push", &Publisher<type>::push,                \
+                 py::call_guard<py::gil_scoped_release>())      \
             ;                                                   \
         py::class_<Subscriber<type>>(m, "Subscriber")           \
             .def(py::init<>())                                  \
@@ -360,8 +364,10 @@ void __umt_init_message_##name(pybind11::class_<type> && var);  \
             .def("reset", &Subscriber<type>::reset)             \
             .def("bind", &Subscriber<type>::bind)               \
             .def("clear", &Subscriber<type>::clear)             \
-            .def("pop", &Subscriber<type>::pop)                 \
-            .def("pop_for", &Subscriber<type>::pop_for)         \
+            .def("pop", &Subscriber<type>::pop,                 \
+                 py::call_guard<py::gil_scoped_release>())      \
+            .def("pop_for", &Subscriber<type>::pop_for,         \
+                 py::call_guard<py::gil_scoped_release>())      \
             ;                                                   \
         try {                                                   \
             __umt_init_message_##name(                          \
